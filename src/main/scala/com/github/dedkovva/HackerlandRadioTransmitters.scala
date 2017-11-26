@@ -16,7 +16,8 @@ object HackerlandRadioTransmitters {
       for(x_i <- 0 until n) {
         x(x_i) = sc.nextInt()
       }
-      val result = solve(n, k, x)
+      val x2 = x.filter(_ > 0)
+      val result = solve(k, x2)
       println(result)
     }
 
@@ -43,14 +44,41 @@ object HackerlandRadioTransmitters {
       clusters
     }
 
-    def solve(n: Int, k: Int, x: Array[Int]): Int = {
+    def solve(k: Int, x: Array[Int]): Int = {
       val sorted = x.sorted
 
       def solveCluster(cluster: ArrayBuffer[Int]): Int = {
-        val amp = cluster(cluster.length - 1) - cluster.head + 1
-        val span = 2*k + 1
-        val t = amp / span
-        if (amp % span == 0) t else t + 1
+        val amp1 = cluster(cluster.length - 1) - cluster.head + 1
+        val span1 = 2 * k + 1
+        val t1 = amp1 / span1
+
+        if (amp1 % span1 == 0) {
+          var ideal = true
+          var i = 0
+          var delta = k
+          var xi = cluster.head
+          while (i < t1 && ideal) {
+            xi = xi + delta
+            i += 1
+            delta = span1
+            ideal = cluster.contains(xi)
+          }
+          if (ideal) t1 else t1 + 1
+        } else if ((amp1 - 1) == t1 * (2 * k) + (t1 - 1) * k) {
+          var ideal = true
+          var i = 0
+          var delta = k
+          var xi = cluster.head
+          while (i < t1 && ideal) {
+            xi = xi + delta
+            i += 1
+            delta = 3 * k
+            ideal = cluster.contains(xi) && Range(xi + k + 1, xi + 2 * k).forall(e => !cluster.contains(e))
+          }
+          if (ideal) t1 else t1 + 1
+        } else {
+          t1 + 1
+        }
       }
 
       val clusters = findClusters(k, sorted)
