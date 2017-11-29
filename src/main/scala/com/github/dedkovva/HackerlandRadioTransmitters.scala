@@ -6,8 +6,6 @@ package com.github.dedkovva
 object HackerlandRadioTransmitters {
   object Solution {
 
-    import scala.collection.mutable.ArrayBuffer
-
     def main(args: Array[String]) {
       val sc = new java.util.Scanner (System.in)
       val n = sc.nextInt()
@@ -21,69 +19,57 @@ object HackerlandRadioTransmitters {
       println(result)
     }
 
-    def findClusters(k: Int, sorted: Array[Int]): Seq[ArrayBuffer[Int]] = {
-      val uniqueSorted: Array[Int] = sorted.distinct
-      val n2 = uniqueSorted.length
-      val spaces = new Array[Int](n2)
-      for (i <- 0 to n2 - 2) {
-        spaces(i) = uniqueSorted(i + 1) - uniqueSorted(i)
-      }
-      spaces(n2 - 1) = 0
-
-      val clusters: ArrayBuffer[ArrayBuffer[Int]] = ArrayBuffer.empty
-
-      var temp = ArrayBuffer.empty[Int]
-      for (i <- 0 until n2) {
-        temp.append(uniqueSorted(i))
-
-        if ((spaces(i) > k || i == (n2 - 1)) && temp.nonEmpty) {
-          clusters.append(temp)
-          temp = ArrayBuffer.empty[Int]
-        }
-      }
-      clusters
-    }
-
     def solve(k: Int, x: Array[Int]): Int = {
-      val sorted = x.sorted
+      val z = x.sorted.distinct
 
-      def solveCluster(cluster: ArrayBuffer[Int]): Int = {
-        val amp1 = cluster(cluster.length - 1) - cluster.head + 1
-        val span1 = 2 * k + 1
-        val t1 = amp1 / span1
+      var n = 0
+      var t = 0
+      var t1 = 0
+      var m = -1
 
-        if (amp1 % span1 == 0) {
-          var ideal = true
-          var i = 0
-          var delta = k
-          var xi = cluster.head
-          while (i < t1 && ideal) {
-            xi = xi + delta
-            i += 1
-            delta = span1
-            ideal = cluster.contains(xi)
+      while (t < z.length) {
+        val i = t + 1
+        val j = i + 1
+//        println(s"i = $i, j = $j")
+
+        if (i < z.length && z(i) == z(t1) + k ||
+          j < z.length && z(j) == z(t1) + k ||
+          i < z.length && j < z.length && z(i) < z(t1) + k && z(j) > z(t1) + k ||
+          i < z.length && z(i) - z(t1) > k) {
+
+          n += 1
+//          println(s"i = $i, j = $j, z = $z, t1 = $t1, k = $k")
+          
+          if (j < z.length && z(j) == z(t1) + k) {
+            m = j
+          } else if (i < z.length && z(i) - z(t1) > k) {
+            m = t1
+          } else  {
+            m = i
           }
-          if (ideal) t1 else t1 + 1
-        } else if ((amp1 - 1) == t1 * (2 * k) + (t1 - 1) * k) {
-          var ideal = true
-          var i = 0
-          var delta = k
-          var xi = cluster.head
-          while (i < t1 && ideal) {
-            xi = xi + delta
-            i += 1
-            delta = 3 * k
-            ideal = cluster.contains(xi) && Range(xi + k + 1, xi + 2 * k).forall(e => !cluster.contains(e))
+          
+          t = m + 1
+//          println(s"m = $m")
+          
+          while (t < z.length && z(t) <= z(m) + k) {
+            t += 1
           }
-          if (ideal) t1 else t1 + 1
+//          println(s"t = $t")
+
+          t1 = t
         } else {
-          t1 + 1
+          t += 1
         }
+
+//        println(s"t = $t, t1 = $t1")
+//        println
       }
 
-      val clusters = findClusters(k, sorted)
+      if (t > t1 || z(z.length - 2) == z(m) + k) {
+        n += 1
+      }
 
-      clusters.map(solveCluster).sum
+      n
     }
   }
 }
